@@ -116,6 +116,8 @@ for user in ['jon', 'jim', 'phill']:
     if user in rating_counts_pie.index:
         create_pie_chart(rating_counts_pie.loc[user], user, colors)
 
+
+
 # Replace 'YOUR_API_KEY' with your actual TMDB API key
 API_KEY = '0af5b4f32534825e575111d5029fb03e'
 
@@ -203,3 +205,43 @@ df.to_csv('MovieData/Updated_Movies.csv', index=False)
 # Display the updated DataFrame
 print("Updated DataFrame:")
 print(df)
+
+# Extract genres from the DataFrame
+genres = df['Genres'].str.split(', ')
+
+# Flatten the list of genres
+genres = [genre for sublist in genres.dropna() for genre in sublist]
+
+# Count the occurrences of each genre
+genre_counts = pd.Series(genres).value_counts()
+
+# Plot the bar chart
+plt.figure(figsize=(12, 8))
+sns.barplot(x=genre_counts.values, y=genre_counts.index, palette='viridis')
+plt.xlabel('Frequency')
+plt.ylabel('Genre')
+plt.title('Most Picked Genres')
+plt.show()
+
+# Extract genres from the DataFrame
+genres = df['Genres'].str.split(', ')
+
+# Create a new DataFrame to store genre counts by user
+genre_counts_by_user = pd.DataFrame()
+
+# Count the occurrences of each genre for each user
+for user in ['jon', 'jim', 'phill']:
+    user_genre_counts = pd.Series([genre for sublist in genres[df['Picked By'] == user].dropna() for genre in sublist]).value_counts()
+    genre_counts_by_user[user] = user_genre_counts
+
+# Plot the bar chart
+plt.figure(figsize=(12, 8))
+sns.barplot(x=genre_counts_by_user.index, y='jon', data=genre_counts_by_user, color='blue', label='Jon')
+sns.barplot(x=genre_counts_by_user.index, y='jim', data=genre_counts_by_user, color='green', label='Jim')
+sns.barplot(x=genre_counts_by_user.index, y='phill', data=genre_counts_by_user, color='purple', label='Phill')
+plt.xlabel('Genre')
+plt.ylabel('Frequency')
+plt.title('Most Picked Genres by User')
+plt.legend()
+plt.xticks(rotation=45)
+plt.show()
