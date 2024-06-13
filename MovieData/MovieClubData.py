@@ -30,67 +30,35 @@ df = df.dropna(subset=['Avg Rating'])
 print("Cleaned DataFrame:")
 print(df)
 
+# Define the movie IDs to exclude
+exclude_ids = [384717, 43074]
 
+# Filter the DataFrame to include only the specified users and exclude specific TMDB IDs
+df_filtered = df[(df['Picked By'].isin(['jon', 'jim', 'phill'])) & (~df['TMDB_ID'].isin(exclude_ids))]
+
+# Display the filtered DataFrame
+print("Filtered DataFrame:")
+print(df_filtered)
+
+# Replace 'YOUR_API_KEY' with your actual TMDB API key
 API_KEY = '0af5b4f32534825e575111d5029fb03e'
 
-# Function to get movie details by title
-def get_movie_details(title, api_key):
-    base_url = 'https://api.themoviedb.org/3/search/movie'
-    params = {
-        'api_key': api_key,
-        'query': title
-    }
-    response = requests.get(base_url, params=params)
-    if response.status_code == 200:
-        data = response.json()
-        if data['results']:
-            return data['results'][0]  # Return the first search result
-    return None
-
-# Function to fetch the genre list from TMDB API
-def get_genre_list(api_key):
-    base_url = 'https://api.themoviedb.org/3/genre/movie/list'
-    params = {
-        'api_key': api_key
-    }
-    response = requests.get(base_url, params=params)
-    if response.status_code == 200:
-        data = response.json()
-        return {genre['id']: genre['name'] for genre in data['genres']}
-    return None
-
-# Get the genre list
-genre_list = get_genre_list(API_KEY)
-
-# Add columns to store additional data from TMDB
-df['TMDB_ID'] = None
-df['Overview'] = None
-df['Genres'] = None
-df['Release Date'] = None
+# Add columns for Vote Average, Vote Count, and TMDb Link
 df['Vote Average'] = None
 df['Vote Count'] = None
 df['TMDb Link'] = None
 
-# Fetch data for each movie in the DataFrame
+# Change 'Release Year' to 'Release Date'
+df.rename(columns={'Release Year': 'Release Date'}, inplace=True)
+
+# Fetch data for each movie in the DataFrame and populate TMDb Link
 for idx, row in df.iterrows():
-    title = row['Movie Name']
-    movie_details = get_movie_details(title, API_KEY)
-    if movie_details:
-        df.at[idx, 'TMDB_ID'] = movie_details.get('id')
-        df.at[idx, 'Overview'] = movie_details.get('overview')
-        df.at[idx, 'Genres'] = ', '.join(
-            [genre_list.get(genre_id) for genre_id in movie_details.get('genre_ids', [])]
-        )
-        df.at[idx, 'Release Date'] = movie_details.get('release_date')
-        df.at[idx, 'Vote Average'] = movie_details.get('vote_average')
-        df.at[idx, 'Vote Count'] = movie_details.get('vote_count')
+    tmdb_id = row['TMDB_ID']
+    df.at[idx, 'TMDb Link'] = f'https://www.themoviedb.org/movie/{tmdb_id}'
 
-        tmdb_id = movie_details.get('id')
-        if tmdb_id:
-            df.at[idx, 'TMDb Link'] = f'https://www.themoviedb.org/movie/{tmdb_id}'
-
-# Drop unused Columns
-df.drop(['IMDB Link', '5 Star Rating', 'Unnamed: 10', 'Unnamed: 11', '1242', '1418', '1286'], axis=1, inplace=True)
+# Drop unused columns
+columns_to_drop = ['IMDB Link', '5 Star Rating', 'Unnamed: 10', 'Unnamed: 11', '1242', '1418', '1286']
+df.drop(columns=columns_to_drop, inplace=True)
 
 # Save the updated DataFrame to a new CSV file
 df.to_csv('MovieData/Updated_Movies.csv', index=False)
@@ -117,10 +85,7 @@ conn.close()
 print("Updated DataFrame:")
 print(df)
 
-# Define the movie IDs to exclude
-exclude_ids = [384717, 43074]
-
-# Filter the DataFrame to include only the specified users and exclude specific TMDB IDs
+# Filter the DataFrame again to ensure correct filtering after saving
 df_filtered = df[(df['Picked By'].isin(['jon', 'jim', 'phill'])) & (~df['TMDB_ID'].isin(exclude_ids))]
 
 # Display the filtered DataFrame
@@ -199,28 +164,15 @@ genres = df_filtered['Genres'].str.split(', ')
 # Flatten the list of genres
 genres = [genre for sublist in genres.dropna() for genre in sublist]
 
-# Count the occurrences of each genre
-genre_counts = pd.Series(genres).value_counts()
-
-# Plot the bar chart
-plt.figure(figsize=(12, 8))
-sns.barplot(x=genre_counts.values, y=genre_counts.index, palette='viridis')
-plt.xlabel('Frequency')
-plt.ylabel('Genre')
-plt.title('Most Picked Genres')
-plt.show()
-
-# Create a new DataFrame to store genre counts by user
-genre_counts_by_user = pd.DataFrame()
-
 # Count the occurrences of each genre for each user
+genre_counts_by_user = pd.DataFrame()
 for user in ['jon', 'jim', 'phill']:
     user_genre_counts = pd.Series([genre for sublist in genres[df_filtered['Picked By'] == user].dropna() for genre in sublist]).value_counts()
     genre_counts_by_user[user] = user_genre_counts
 
 # Plot the bar chart for genre counts by user
-plt.figure(figsize=(12, 8))
 genre_counts_by_user = genre_counts_by_user.fillna(0).T  # Ensure no NaN values and transpose for plotting
+plt.figure(figsize=(12, 8))
 genre_counts_by_user.plot(kind='bar', stacked=True, colormap='viridis')
 plt.xlabel('Genre')
 plt.ylabel('Frequency')
