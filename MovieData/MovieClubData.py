@@ -30,7 +30,7 @@ df = df.dropna(subset=['Avg Rating'])
 print("Cleaned DataFrame:")
 print(df)
 
-# Replace 'YOUR_API_KEY' with your actual TMDB API key
+
 API_KEY = '0af5b4f32534825e575111d5029fb03e'
 
 # Function to get movie details by title
