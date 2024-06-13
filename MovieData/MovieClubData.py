@@ -90,7 +90,7 @@ for idx, row in df.iterrows():
             df.at[idx, 'TMDb Link'] = f'https://www.themoviedb.org/movie/{tmdb_id}'
 
 # Drop unused Columns
-df.drop(['IMDB Link', '5 Star Rating', 'Unnamed: 10', 'Unnamed: 11', '1242', '1418', '1286'], axis=1, inplace=True)
+df.drop(['IMDB Link', '5 Star Rating', 'Unnamed: 10', 'Unnamed: 11', '1286', '1467', '1286'], axis=1, inplace=True)
 
 # Save the updated DataFrame to a new CSV file
 df.to_csv('MovieData/Updated_Movies.csv', index=False)
