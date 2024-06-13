@@ -40,6 +40,7 @@ df_filtered = df[(df['Picked By'].isin(['jon', 'jim', 'phill'])) & (~df['TMDB_ID
 print("Filtered DataFrame:")
 print(df_filtered)
 
+
 # Replace 'YOUR_API_KEY' with your actual TMDB API key
 API_KEY = '0af5b4f32534825e575111d5029fb03e'
 
@@ -47,6 +48,7 @@ API_KEY = '0af5b4f32534825e575111d5029fb03e'
 df['Vote Average'] = None
 df['Vote Count'] = None
 df['TMDb Link'] = None
+df['TMDB_ID'] = None
 
 # Change 'Release Year' to 'Release Date'
 df.rename(columns={'Release Year': 'Release Date'}, inplace=True)
