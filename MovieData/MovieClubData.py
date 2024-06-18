@@ -135,9 +135,12 @@ def plot_initial_charts(df_filtered):
     # Reset index for seaborn
     rating_counts = rating_counts.T.reset_index().melt(id_vars='Avg Rating', var_name='User', value_name='Frequency')
 
+    # Define a custom color palette
+    custom_palette = {'jon': 'blue', 'jim': 'green', 'phill': 'purple'}
+
     # Plot the grouped bar chart
     plt.figure(figsize=(12, 8))
-    sns.barplot(x='Avg Rating', y='Frequency', hue='User', data=rating_counts, palette={'jon': 'blue', 'jim': 'green', 'phill': 'purple'})
+    sns.barplot(x='Avg Rating', y='Frequency', hue='User', data=rating_counts, palette=custom_palette)
     plt.xlabel('Rating')
     plt.ylabel('Frequency')
     plt.title('Frequency of Ratings (1-10) by Jon, Jim, and Phill')
@@ -155,16 +158,17 @@ def plot_initial_charts(df_filtered):
 
     # Plot the line chart
     plt.figure(figsize=(12, 8))
-    sns.lineplot(data=df_filtered, x='Date', y='Avg Rating', hue='Picked By', marker='o')
+    sns.lineplot(data=df_filtered, x='Date', y='Avg Rating', hue='Picked By', marker='o', palette=custom_palette)
     plt.xlabel('Date')
     plt.ylabel('Average Rating')
     plt.title('Trend of Average Ratings Over Time')
     plt.xticks(rotation=45)
+    plt.gca().xaxis.set_major_locator(plt.MaxNLocator(10))  # Limit the number of x-axis ticks
     plt.show()
 
     # Plot the box plot
     plt.figure(figsize=(12, 8))
-    sns.boxplot(x='Picked By', y='Avg Rating', data=df_filtered, palette={'jon': 'blue', 'jim': 'green', 'phill': 'purple'})
+    sns.boxplot(x='Picked By', y='Avg Rating', data=df_filtered, palette=custom_palette)
     plt.xlabel('Picked By')
     plt.ylabel('Average Rating')
     plt.title('Distribution of Average Ratings by User')
@@ -215,16 +219,16 @@ genre_counts_by_user = pd.DataFrame()
 
 # Count the occurrences of each genre for each user
 for user in ['jon', 'jim', 'phill']:
-    user_genre_counts = pd.Series([genre for sublist in genres[df_filtered['Picked By'] == user].dropna() for genre in sublist]).value_counts()
+    user_genre_counts = pd.Series([genre for sublist in df_filtered[df_filtered['Picked By'] == user]['Genres'].str.split(', ').dropna() for genre in sublist]).value_counts()
     genre_counts_by_user[user] = user_genre_counts
 
-# Plot the bar chart for genre counts by user
-plt.figure(figsize=(12, 8))
-genre_counts_by_user = genre_counts_by_user.fillna(0).T  # Ensure no NaN values and transpose for plotting
-genre_counts_by_user.plot(kind='bar', stacked=True, colormap='viridis')
+# Fill NaN values with 0
+genre_counts_by_user.fillna(0, inplace=True)
+
+# Plot the grouped bar chart
+genre_counts_by_user.plot(kind='bar', figsize=(12, 8), colormap='viridis')
 plt.xlabel('Genre')
 plt.ylabel('Frequency')
 plt.title('Most Picked Genres by User')
-plt.legend(title='User')
 plt.xticks(rotation=45)
 plt.show()
