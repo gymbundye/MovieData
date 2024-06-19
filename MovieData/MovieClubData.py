@@ -113,10 +113,6 @@ for _, row in df.iterrows():
 conn.commit()
 conn.close()
 
-# Display the updated DataFrame
-print("Updated DataFrame:")
-print(df)
-
 # Define the movie IDs to exclude
 exclude_ids = [384717, 43074]
 
@@ -176,26 +172,35 @@ def plot_initial_charts(df_filtered):
 
 plot_initial_charts(df_filtered)
 
-# Define a function to create pie charts for each user
-def create_pie_chart(data, user, colors):
-    labels = data.index
-    sizes = data.values
-    plt.figure(figsize=(6, 6))
-    plt.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors)
-    plt.title(f'Distribution of Ratings for {user.capitalize()}')
-    plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+# Function to plot comparison of user ratings and TMDB ratings
+def plot_comparison_chart(df_filtered):
+    # Prepare the DataFrame for comparison
+    comparison_df = df_filtered[['Movie Name', 'Picked By', 'Avg Rating', 'Vote Average']]
+
+    # Pivot the DataFrame for easier plotting
+    comparison_df = comparison_df.pivot(index='Movie Name', columns='Picked By', values=['Avg Rating', 'Vote Average'])
+
+    # Flatten the MultiIndex columns
+    comparison_df.columns = ['_'.join(col).strip() for col in comparison_df.columns.values]
+
+    # Reset the index to have 'Movie Name' as a column
+    comparison_df.reset_index(inplace=True)
+
+    # Define a custom color palette
+    custom_palette = {'Avg Rating_jon': 'blue', 'Avg Rating_jim': 'green', 'Avg Rating_phill': 'purple',
+                      'Vote Average_jon': 'red', 'Vote Average_jim': 'orange', 'Vote Average_phill': 'pink'}
+
+    # Plot the comparison chart
+    comparison_df.set_index('Movie Name').plot(kind='bar', figsize=(14, 8), color=[custom_palette.get(col) for col in comparison_df.columns[1:]])
+    plt.xlabel('Movie Name')
+    plt.ylabel('Rating')
+    plt.title('Comparison of User Ratings and TMDB Ratings')
+    plt.xticks(rotation=90)
+    plt.legend(title='Rating Type and User')
     plt.show()
 
-# Define colors for each user
-colors = ['#ff9999','#66b3ff','#99ff99','#ffcc99','#c2c2f0','#ffb3e6','#c4e17f','#76d7c4','#ff6f61','#6a5acd']
-
-# Count the frequency of each rating for these users
-rating_counts_pie = df_filtered.groupby(['Picked By', 'Avg Rating']).size().unstack(fill_value=0)
-
-# Create pie charts for each user
-for user in ['jon', 'jim', 'phill']:
-    if user in rating_counts_pie.index:
-        create_pie_chart(rating_counts_pie.loc[user], user, colors)
+# Plot the comparison chart
+plot_comparison_chart(df_filtered)
 
 # Extract genres from the DataFrame
 genres = df_filtered['Genres'].str.split(', ')
@@ -214,11 +219,11 @@ plt.ylabel('Genre')
 plt.title('Most Picked Genres')
 plt.show()
 
-# Create a new DataFrame to store genre counts by user
+# Plot most picked genres by user
+users = df_filtered['Picked By'].unique()
 genre_counts_by_user = pd.DataFrame()
 
-# Count the occurrences of each genre for each user
-for user in ['jon', 'jim', 'phill']:
+for user in users:
     user_genre_counts = pd.Series([genre for sublist in df_filtered[df_filtered['Picked By'] == user]['Genres'].str.split(', ').dropna() for genre in sublist]).value_counts()
     genre_counts_by_user[user] = user_genre_counts
 
