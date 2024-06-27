@@ -172,35 +172,25 @@ def plot_initial_charts(df_filtered):
 
 plot_initial_charts(df_filtered)
 
-# Function to plot comparison of user ratings and TMDB ratings
-def plot_comparison_chart(df_filtered):
+# Function to plot comparison of user ratings and TMDB ratings for a specific user
+def plot_comparison_chart(df_filtered, user, color):
     # Prepare the DataFrame for comparison
-    comparison_df = df_filtered[['Movie Name', 'Picked By', 'Avg Rating', 'Vote Average']]
-
-    # Pivot the DataFrame for easier plotting
-    comparison_df = comparison_df.pivot(index='Movie Name', columns='Picked By', values=['Avg Rating', 'Vote Average'])
-
-    # Flatten the MultiIndex columns
-    comparison_df.columns = ['_'.join(col).strip() for col in comparison_df.columns.values]
-
-    # Reset the index to have 'Movie Name' as a column
-    comparison_df.reset_index(inplace=True)
-
-    # Define a custom color palette
-    custom_palette = {'Avg Rating_jon': 'blue', 'Avg Rating_jim': 'green', 'Avg Rating_phill': 'purple',
-                      'Vote Average_jon': 'red', 'Vote Average_jim': 'orange', 'Vote Average_phill': 'pink'}
+    comparison_df = df_filtered[df_filtered['Picked By'] == user][['Movie Name', 'Avg Rating', 'Vote Average']]
 
     # Plot the comparison chart
-    comparison_df.set_index('Movie Name').plot(kind='bar', figsize=(14, 8), color=[custom_palette.get(col) for col in comparison_df.columns[1:]])
+    ax = comparison_df.set_index('Movie Name').plot(kind='bar', figsize=(14, 8), color=[color, 'orange'])
     plt.xlabel('Movie Name')
     plt.ylabel('Rating')
-    plt.title('Comparison of User Ratings and TMDB Ratings')
-    plt.xticks(rotation=90)
-    plt.legend(title='Rating Type and User')
+    plt.title(f'Comparison of {user.capitalize()}\'s Ratings and TMDB Ratings')
+    plt.xticks(rotation=90, ha='right')
+    plt.legend(title='Rating Type', labels=['User Rating', 'TMDB Rating'])
+    plt.tight_layout()  # Adjust layout to fit labels
     plt.show()
 
-# Plot the comparison chart
-plot_comparison_chart(df_filtered)
+# Plot the comparison charts for each user with their respective colors
+plot_comparison_chart(df_filtered, 'jon', 'blue')
+plot_comparison_chart(df_filtered, 'jim', 'green')
+plot_comparison_chart(df_filtered, 'phill', 'purple')
 
 # Extract genres from the DataFrame
 genres = df_filtered['Genres'].str.split(', ')
@@ -227,13 +217,14 @@ for user in users:
     user_genre_counts = pd.Series([genre for sublist in df_filtered[df_filtered['Picked By'] == user]['Genres'].str.split(', ').dropna() for genre in sublist]).value_counts()
     genre_counts_by_user[user] = user_genre_counts
 
-# Fill NaN values with 0
 genre_counts_by_user.fillna(0, inplace=True)
 
-# Plot the grouped bar chart
-genre_counts_by_user.plot(kind='bar', figsize=(12, 8), colormap='viridis')
+# Plot the grouped bar chart with specified colors
+colors = {'jon': 'blue', 'jim': 'green', 'phill': 'purple'}
+genre_counts_by_user.plot(kind='bar', figsize=(14, 8), color=[colors[user] for user in genre_counts_by_user.columns])
 plt.xlabel('Genre')
 plt.ylabel('Frequency')
 plt.title('Most Picked Genres by User')
 plt.xticks(rotation=45)
+plt.tight_layout()  # Adjust layout to fit labels
 plt.show()
