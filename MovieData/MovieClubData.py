@@ -4,7 +4,7 @@ import seaborn as sns
 import requests
 import sqlite3
 
-# Path to your CSV file
+# Path to CSV file
 Movies = 'MovieData/Movies.csv'
 
 # Read the CSV file into a DataFrame
