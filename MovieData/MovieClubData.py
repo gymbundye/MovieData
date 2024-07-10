@@ -70,24 +70,33 @@ df['Release Date'] = None
 df['Vote Average'] = None
 df['Vote Count'] = None
 df['TMDb Link'] = None
+df['Running Time'] = None
 
 # Fetch data for each movie in the DataFrame
 for idx, row in df.iterrows():
     title = row['Movie Name']
     movie_details = get_movie_details(title, API_KEY)
     if movie_details:
-        df.at[idx, 'TMDB_ID'] = movie_details.get('id')
-        df.at[idx, 'Overview'] = movie_details.get('overview')
-        df.at[idx, 'Genres'] = ', '.join(
-            [genre_list.get(genre_id) for genre_id in movie_details.get('genre_ids', [])]
-        )
-        df.at[idx, 'Release Date'] = movie_details.get('release_date')
-        df.at[idx, 'Vote Average'] = movie_details.get('vote_average')
-        df.at[idx, 'Vote Count'] = movie_details.get('vote_count')
+        movie_id = movie_details.get('id')
+        if movie_id:
+            # Get full movie details including runtime
+            movie_url = f'https://api.themoviedb.org/3/movie/{movie_id}'
+            movie_response = requests.get(movie_url, params={'api_key': API_KEY})
+            if movie_response.status_code == 200:
+                movie_full_details = movie_response.json()
+                df.at[idx, 'TMDB_ID'] = movie_full_details.get('id')
+                df.at[idx, 'Overview'] = movie_full_details.get('overview')
+                df.at[idx, 'Genres'] = ', '.join(
+                    [genre['name'] for genre in movie_full_details.get('genres', [])]
+                )
+                df.at[idx, 'Release Date'] = movie_full_details.get('release_date')
+                df.at[idx, 'Vote Average'] = movie_full_details.get('vote_average')
+                df.at[idx, 'Vote Count'] = movie_full_details.get('vote_count')
+                df.at[idx, 'Running Time'] = movie_full_details.get('runtime')
 
-        tmdb_id = movie_details.get('id')
-        if tmdb_id:
-            df.at[idx, 'TMDb Link'] = f'https://www.themoviedb.org/movie/{tmdb_id}'
+                tmdb_id = movie_full_details.get('id')
+                if tmdb_id:
+                    df.at[idx, 'TMDb Link'] = f'https://www.themoviedb.org/movie/{tmdb_id}'
 
 # Drop unused Columns
 df.drop(['IMDB Link', '5 Star Rating', 'Unnamed: 10', 'Unnamed: 11', '1286', '1467', '1286'], axis=1, inplace=True)
@@ -101,13 +110,13 @@ c = conn.cursor()
 
 # Create a table to store movie data
 c.execute('''CREATE TABLE IF NOT EXISTS movies
-             (Movie_Name TEXT, Picked_By TEXT, Avg_Rating REAL, Date TEXT, TMDB_ID INTEGER, Overview TEXT, Genres TEXT, Release_Date TEXT, Vote_Average REAL, Vote_Count INTEGER, TMDb_Link TEXT)''')
+             (Movie_Name TEXT, Picked_By TEXT, Avg_Rating REAL, Date TEXT, TMDB_ID INTEGER, Overview TEXT, Genres TEXT, Release_Date TEXT, Vote_Average REAL, Vote_Count INTEGER, TMDb_Link TEXT, Running_Time INTEGER)''')
 
 # Insert data into the table
 for _, row in df.iterrows():
-    c.execute("INSERT INTO movies VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    c.execute("INSERT INTO movies VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
               (row['Movie Name'], row['Picked By'], row['Avg Rating'], row['Date'], row['TMDB_ID'], row['Overview'],
-               row['Genres'], row['Release Date'], row['Vote Average'], row['Vote Count'], row['TMDb Link']))
+               row['Genres'], row['Release Date'], row['Vote Average'], row['Vote Count'], row['TMDb Link'], row['Running Time']))
 
 # Commit changes and close the connection
 conn.commit()
@@ -131,8 +140,8 @@ def plot_initial_charts(df_filtered):
     # Reset index for seaborn
     rating_counts = rating_counts.T.reset_index().melt(id_vars='Avg Rating', var_name='User', value_name='Frequency')
 
-    # Define a custom color palette
-    custom_palette = {'jon': 'blue', 'jim': 'green', 'phill': 'purple'}
+    # Define a custom color palette with more unique versions of purple, green, and blue
+    custom_palette = {'jon': '#4682B4', 'jim': '#228B22', 'phill':  '#4B0082'}  # Indigo, ForestGreen, SteelBlue
 
     # Plot the grouped bar chart
     plt.figure(figsize=(12, 8))
@@ -176,55 +185,44 @@ plot_initial_charts(df_filtered)
 def plot_comparison_chart(df_filtered, user, color):
     # Prepare the DataFrame for comparison
     comparison_df = df_filtered[df_filtered['Picked By'] == user][['Movie Name', 'Avg Rating', 'Vote Average']]
+    comparison_df.set_index('Movie Name', inplace=True)
 
     # Plot the comparison chart
-    ax = comparison_df.set_index('Movie Name').plot(kind='bar', figsize=(14, 8), color=[color, 'orange'])
+    plt.figure(figsize=(14, 7))
+    comparison_df.plot(kind='bar', color=[color, 'gray'], edgecolor='black')
     plt.xlabel('Movie Name')
     plt.ylabel('Rating')
     plt.title(f'Comparison of {user.capitalize()}\'s Ratings and TMDB Ratings')
-    plt.xticks(rotation=90, ha='right')
-    plt.legend(title='Rating Type', labels=['User Rating', 'TMDB Rating'])
-    plt.tight_layout()  # Adjust layout to fit labels
+    plt.legend([f'{user.capitalize()}\'s Rating', 'TMDB Rating'])
+    plt.xticks(rotation=90)
     plt.show()
 
-# Plot the comparison charts for each user with their respective colors
-plot_comparison_chart(df_filtered, 'jon', 'blue')
-plot_comparison_chart(df_filtered, 'jim', 'green')
-plot_comparison_chart(df_filtered, 'phill', 'purple')
+# Split comparison charts for Jon, Jim, and Phill
+plot_comparison_chart(df_filtered, 'jon', '#4682B4')  # Indigo
+plot_comparison_chart(df_filtered, 'jim', '#228B22')  # ForestGreen
+plot_comparison_chart(df_filtered, 'phill', '#4B0082')  # SteelBlue
 
-# Extract genres from the DataFrame
-genres = df_filtered['Genres'].str.split(', ')
+# Get the frequency of each genre
+genre_counts = df_filtered['Genres'].str.split(', ').explode().value_counts()
 
-# Flatten the list of genres
-genres = [genre for sublist in genres.dropna() for genre in sublist]
-
-# Count the occurrences of each genre
-genre_counts = pd.Series(genres).value_counts()
-
-# Plot the bar chart
+# Plot the genre frequency
 plt.figure(figsize=(12, 8))
 sns.barplot(x=genre_counts.values, y=genre_counts.index, palette='viridis')
 plt.xlabel('Frequency')
 plt.ylabel('Genre')
-plt.title('Most Picked Genres')
+plt.title('Frequency of Genres')
 plt.show()
 
-# Plot most picked genres by user
-users = df_filtered['Picked By'].unique()
-genre_counts_by_user = pd.DataFrame()
+# Calculate total running time per user
+total_running_time = df_filtered.groupby('Picked By')['Running Time'].sum().sort_values(ascending=False)
 
-for user in users:
-    user_genre_counts = pd.Series([genre for sublist in df_filtered[df_filtered['Picked By'] == user]['Genres'].str.split(', ').dropna() for genre in sublist]).value_counts()
-    genre_counts_by_user[user] = user_genre_counts
+# Define more unique colors for each user
+user_colors = {'jon': '#4682B4', 'jim': '#228B22', 'phill': '#4B0082'}  # Indigo, ForestGreen, SteelBlue
 
-genre_counts_by_user.fillna(0, inplace=True)
-
-# Plot the grouped bar chart with specified colors
-colors = {'jon': 'blue', 'jim': 'green', 'phill': 'purple'}
-genre_counts_by_user.plot(kind='bar', figsize=(14, 8), color=[colors[user] for user in genre_counts_by_user.columns])
-plt.xlabel('Genre')
-plt.ylabel('Frequency')
-plt.title('Most Picked Genres by User')
-plt.xticks(rotation=45)
-plt.tight_layout()  # Adjust layout to fit labels
+# Plotting the total running times with assigned colors
+plt.figure(figsize=(12, 8))
+sns.barplot(x=total_running_time.index, y=total_running_time.values, palette=[user_colors[user] for user in total_running_time.index])
+plt.xlabel('User')
+plt.ylabel('Total Running Time (minutes)')
+plt.title('Total Running Time of Movies Picked by Each User')
 plt.show()
