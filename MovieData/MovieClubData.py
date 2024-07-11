@@ -158,7 +158,7 @@ def plot_initial_charts(df_filtered):
     sns.heatmap(rating_counts_heatmap, annot=True, cmap="YlGnBu", fmt="d")
     plt.xlabel('Avg Rating')
     plt.ylabel('Picked By')
-    plt.title('Heatmap of Ratings by Jon, Jim, and Phill')
+    plt.title('Heatmap of Ratings of by Jon, Jim, and Phill')
     plt.show()
 
     # Plot the line chart
@@ -192,7 +192,7 @@ def plot_comparison_chart(df_filtered, user, color):
     comparison_df.plot(kind='bar', color=[color, 'gray'], edgecolor='black')
     plt.xlabel('Movie Name')
     plt.ylabel('Rating')
-    plt.title(f'Comparison of {user.capitalize()}\'s Ratings and TMDB Ratings')
+    plt.title(f'Comparison of {user.capitalize()}\'s Picks Ratings and TMDB Ratings')
     plt.legend([f'{user.capitalize()}\'s Rating', 'TMDB Rating'])
     plt.xticks(rotation=90)
     plt.show()
@@ -212,6 +212,31 @@ plt.xlabel('Frequency')
 plt.ylabel('Genre')
 plt.title('Frequency of Genres')
 plt.show()
+
+# Explode the genres for each user
+df_exploded = df_filtered.copy()
+df_exploded['Genres'] = df_exploded['Genres'].str.split(', ')
+df_exploded = df_exploded.explode('Genres')
+
+# Count the occurrences of each genre for each user
+genre_user_counts = df_exploded.groupby(['Picked By', 'Genres']).size().unstack(fill_value=0)
+
+# Reset the index for easier plotting with seaborn
+genre_user_counts = genre_user_counts.reset_index().melt(id_vars='Picked By', var_name='Genre', value_name='Frequency')
+
+# Define the color palette for users
+custom_palette = {'jon': '#4682B4', 'jim': '#228B22', 'phill': '#4B0082'}
+
+# Plotting the genre frequency by user using seaborn
+plt.figure(figsize=(14, 10))
+sns.barplot(x='Genre', y='Frequency', hue='Picked By', data=genre_user_counts, palette=custom_palette)
+plt.xlabel('Genre')
+plt.ylabel('Frequency')
+plt.title('Frequency of Each Genre Picked by Jon, Jim, and Phill')
+plt.xticks(rotation=45)
+plt.legend(title='User')
+plt.show()
+
 
 # Calculate total running time per user
 total_running_time = df_filtered.groupby('Picked By')['Running Time'].sum().sort_values(ascending=False)
