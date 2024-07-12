@@ -252,23 +252,27 @@ plt.ylabel('Total Running Time (minutes)')
 plt.title('Total Running Time of Movies Picked by Each User')
 plt.show()
 
-# Count the number of movies picked by each user
-user_counts = df['User'].value_counts()
+# Create a pivot table to count the number of picks by each user
+pivot_table_picks = pd.pivot_table(df_filtered, values='Movie Name', index='Picked By', aggfunc='count')
 
-# Plotting the bar chart using matplotlib
+# Plotting the pivot table using matplotlib
 plt.figure(figsize=(10, 6))
 
-# Plotting the bar chart
-plt.bar(user_counts.index, user_counts.values, color=['blue', 'green', 'purple'])
-
-# Add labels and title
+# Plot the pivot table as a bar chart
+plt.bar(pivot_table_picks.index, pivot_table_picks['Movie Name'], color=['#4682B4', '#228B22', '#4B0082'])  # Using the custom colors for Jon, Jim, and Phill
 plt.xlabel('User')
-plt.ylabel('Number of Movies Picked')
-plt.title('Number of Movies Picked by Each User')
-
-# Show plot
+plt.ylabel('Number of Picks')
+plt.title('Number of Picks by Each User')
+plt.xticks(rotation=0)
+plt.grid(axis='y')  # Add gridlines for clarity
 plt.tight_layout()
 plt.show()
+
+# Display the pivot table
+print("Pivot Table (Number of Picks by Each User):")
+print(pivot_table_picks)
+
+
 # Create a pivot table to summarize the average rating given by each user for each genre
 pivot_table = pd.pivot_table(df_exploded, values='Avg Rating', index='Genres', columns='Picked By', aggfunc='mean', fill_value=0)
 

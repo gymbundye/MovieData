@@ -52,5 +52,7 @@ Below is a list of requirements I have hit for the project
 - I have read in two data sets. One API, One CSV
 - I have Cleaned my data and performed a pandas merge with two data sets, and then calculated some new values based on the new data set. 
 - I have set up a local database and read data into SQLite 
-- I have made 3+ matplotlib or seaborn (or another plotting library) visualizations to display your data.
-- I have 
+- I have made 3+ matplotlib or seaborn visualizations to display my data.
+- I have made at least 1 Pandas pivot table and 1 matplotlib/seaborn plot.
+- I have utilized a virtual environment and included instructions in my README on how the user should set one up
+- I have included a data dictionary
