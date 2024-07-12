@@ -30,7 +30,7 @@ df = df.dropna(subset=['Avg Rating'])
 print("Cleaned DataFrame:")
 print(df)
 
-# Replace 'YOUR_API_KEY' with your actual TMDB API key
+
 API_KEY = '0af5b4f32534825e575111d5029fb03e'
 
 # Function to get movie details by title
@@ -122,7 +122,7 @@ for _, row in df.iterrows():
 conn.commit()
 conn.close()
 
-# Define the movie IDs to exclude
+# Define the movie IDs to exclude one is Girls Ghostbusters the other is nan!
 exclude_ids = [384717, 43074]
 
 # Filter the DataFrame to include only the specified users and exclude specific TMDB IDs
@@ -251,3 +251,29 @@ plt.xlabel('User')
 plt.ylabel('Total Running Time (minutes)')
 plt.title('Total Running Time of Movies Picked by Each User')
 plt.show()
+
+# Count the number of movies picked by each user
+user_counts = df['User'].value_counts()
+
+# Plotting the bar chart using matplotlib
+plt.figure(figsize=(10, 6))
+
+# Plotting the bar chart
+plt.bar(user_counts.index, user_counts.values, color=['blue', 'green', 'purple'])
+
+# Add labels and title
+plt.xlabel('User')
+plt.ylabel('Number of Movies Picked')
+plt.title('Number of Movies Picked by Each User')
+
+# Show plot
+plt.tight_layout()
+plt.show()
+# Create a pivot table to summarize the average rating given by each user for each genre
+pivot_table = pd.pivot_table(df_exploded, values='Avg Rating', index='Genres', columns='Picked By', aggfunc='mean', fill_value=0)
+
+# Display the pivot table
+print("Pivot Table (Average Rating by Genre and User):")
+print(pivot_table)
+
+

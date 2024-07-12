@@ -28,5 +28,29 @@ Since we have been doing the club, we have been keeping a Google Sheet that we s
 It will be a fun thing to show my buddies, and hopefully, you have some fun as well.
 
 
-
+### Instructions
+Clone the repo to your machine
+Create a virtual environment in the project folder. 
+### python3 -m venv venv 
+Activate the virtual environment. 
+### source venv/bin/activate (for windows venv/Scripts/activate)
+Install the required packages. 
+### pip install -r requirements.txt
+Navigate to MovieData/MovieClubData.py
+Click Run and Run without debugging
+Buckle your seatbelt
+To view the SQL use your favorite DB Browser (I use SQLite)
+When you are done working on your repo, deactivate the virtual environment. deactivate
                                                             
+### Requirements
+
+Below is a list of requirements I have hit for the project
+
+- I have included this README
+- I have more than 10 commits
+- I have made the project visually appealing by having set colors for the **MovieClub** members
+- I have read in two data sets. One API, One CSV
+- I have Cleaned my data and performed a pandas merge with two data sets, and then calculated some new values based on the new data set. 
+- I have set up a local database and read data into SQLite 
+- I have made 3+ matplotlib or seaborn (or another plotting library) visualizations to display your data.
+- I have 
