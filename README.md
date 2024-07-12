@@ -1,6 +1,6 @@
 My Data Analysis CAPSTONE PROJECT is...................
 
-                                                            <h1>MOVIE DATA<h1>     
+                                            <h1>MOVIE DATA<h1>     
 
 MovieData is an extension of a real life activity that my friends and I do called Movie Club. Every week we pick a movie,
 watch the movie, and then talk about the movie. We live very far from each other so we dont watch them together but all movies
