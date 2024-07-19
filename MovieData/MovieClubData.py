@@ -30,7 +30,6 @@ df = df.dropna(subset=['Avg Rating'])
 print("Cleaned DataFrame:")
 print(df)
 
-
 API_KEY = '0af5b4f32534825e575111d5029fb03e'
 
 # Function to get movie details by title
@@ -148,7 +147,7 @@ def plot_initial_charts(df_filtered):
     sns.barplot(x='Avg Rating', y='Frequency', hue='User', data=rating_counts, palette=custom_palette)
     plt.xlabel('Rating')
     plt.ylabel('Frequency')
-    plt.title('Frequency of Ratings (1-10) by Jon, Jim, and Phill')
+    plt.title('Frequency of Avg Ratings (1-10) of films picked by by Jon, Jim, and Phill')
     plt.show()
 
     # Plot the heatmap
@@ -163,12 +162,12 @@ def plot_initial_charts(df_filtered):
 
     # Plot the line chart
     plt.figure(figsize=(12, 8))
-    sns.lineplot(data=df_filtered, x='Date', y='Avg Rating', hue='Picked By', marker='o', palette=custom_palette)
+    sns.lineplot(data=df_filtered, x='Date', y='Avg Rating', hue='Picked By', marker='2', palette=custom_palette)
     plt.xlabel('Date')
     plt.ylabel('Average Rating')
     plt.title('Trend of Average Ratings Over Time')
     plt.xticks(rotation=45)
-    plt.gca().xaxis.set_major_locator(plt.MaxNLocator(10))  # Limit the number of x-axis ticks
+    plt.gca().xaxis.set_major_locator(plt.MaxNLocator(20))  # Limit the number of x-axis ticks
     plt.show()
 
     # Plot the box plot
@@ -177,6 +176,25 @@ def plot_initial_charts(df_filtered):
     plt.xlabel('Picked By')
     plt.ylabel('Average Rating')
     plt.title('Distribution of Average Ratings by User')
+    plt.show()
+    
+# Define the custom color palette
+custom_palette = {'jon': '#4682B4', 'jim': '#228B22', 'phill': '#4B0082'}
+
+# List of users
+users = ['jon', 'jim', 'phill']
+
+# Plotting separate charts for each user
+for user in users:
+    plt.figure(figsize=(12, 8))
+    user_data = df_filtered[df_filtered['Picked By'] == user]
+    sns.lineplot(data=user_data, x='Date', y='Avg Rating', marker='o', color=custom_palette[user])
+    plt.xlabel('Date')
+    plt.ylabel('Average Rating')
+    plt.title(f'Trend of Average Ratings Over Time for {user.capitalize()}')
+    plt.xticks(rotation=45)
+    plt.gca().xaxis.set_major_locator(plt.MaxNLocator(10))  # Limit the number of x-axis ticks
+    plt.tight_layout()
     plt.show()
 
 plot_initial_charts(df_filtered)
@@ -237,20 +255,52 @@ plt.xticks(rotation=45)
 plt.legend(title='User')
 plt.show()
 
-
 # Calculate total running time per user
 total_running_time = df_filtered.groupby('Picked By')['Running Time'].sum().sort_values(ascending=False)
 
 # Define more unique colors for each user
 user_colors = {'jon': '#4682B4', 'jim': '#228B22', 'phill': '#4B0082'}  # Indigo, ForestGreen, SteelBlue
 
-# Plotting the total running times with assigned colors
-plt.figure(figsize=(12, 8))
-sns.barplot(x=total_running_time.index, y=total_running_time.values, palette=[user_colors[user] for user in total_running_time.index])
-plt.xlabel('User')
-plt.ylabel('Total Running Time (minutes)')
-plt.title('Total Running Time of Movies Picked by Each User')
+# Calculate total running time per user
+total_running_time = df_filtered.groupby('Picked By')['Running Time'].sum().sort_values(ascending=False)
+
+# Convert running time from minutes to days
+total_running_time_days = total_running_time / (24 * 60)
+
+# Define more unique colors for each user
+user_colors = {'jon': '#4682B4', 'jim': '#228B22', 'phill': '#4B0082'}  # Indigo, ForestGreen, SteelBlue
+
+# Plotting the total running times with assigned colors and additional enhancements
+fig, ax1 = plt.subplots(figsize=(14, 8))
+
+# Primary y-axis: total running time in minutes
+barplot = sns.barplot(x=total_running_time.index, y=total_running_time.values, palette=[user_colors[user] for user in total_running_time.index], ax=ax1)
+
+# Adding value labels on top of bars for minutes
+for index, value in enumerate(total_running_time.values):
+    barplot.text(index, value + 5, f'      {round(value, 2)} Minutes or ', color='black', ha="right")
+
+# Labels and title for the primary y-axis
+ax1.set_xlabel('User')
+ax1.set_ylabel('Total Running Time (minutes)')
+ax1.set_title('Total Running Time of Movies Picked by Each User')
+
+# Rotate x-axis labels for better readability
+ax1.set_xticklabels(ax1.get_xticklabels(), rotation=45)
+
+# Secondary y-axis: total running time in days
+ax2 = ax1.twinx()
+ax2.set_ylabel('Total Running Time (days)')
+
+# Set the limits of the secondary y-axis to match the primary y-axis, but in days
+ax2.set_ylim(ax1.get_ylim()[0] / (24 * 60), ax1.get_ylim()[1] / (24 * 60))
+
+# Adding value labels on top of bars for days
+for index, value in enumerate(total_running_time_days.values):
+    ax2.text(index, value + (5 / (24 * 60)), f'{round(value, 2)} Days', color='blue', ha="left")
+
 plt.show()
+
 
 # Create a pivot table to count the number of picks by each user
 pivot_table_picks = pd.pivot_table(df_filtered, values='Movie Name', index='Picked By', aggfunc='count')
@@ -272,12 +322,9 @@ plt.show()
 print("Pivot Table (Number of Picks by Each User):")
 print(pivot_table_picks)
 
-
 # Create a pivot table to summarize the average rating given by each user for each genre
 pivot_table = pd.pivot_table(df_exploded, values='Avg Rating', index='Genres', columns='Picked By', aggfunc='mean', fill_value=0)
 
 # Display the pivot table
 print("Pivot Table (Average Rating by Genre and User):")
 print(pivot_table)
-
-
