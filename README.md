@@ -36,8 +36,9 @@ Activate the virtual environment.
 ### source venv/bin/activate (for windows venv/Scripts/activate)
 Install the required packages. 
 ### pip install -r requirements.txt
-Navigate to MovieData/MovieClubData.py
-Click Run and Run without debugging
+Navigate to MovieData/MovieData/MovieClubData.py
+Click Run and Run without debugging 
+### (I had an issue where it wouldnt run from the command line if you do too use the top menu) 
 Buckle your seatbelt
 To view the SQL use your favorite DB Browser (I use SQLite)
 When you are done working on your repo, deactivate the virtual environment. deactivate
