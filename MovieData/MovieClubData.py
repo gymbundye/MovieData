@@ -99,16 +99,19 @@ df.to_csv('Updated_Movies.csv', index=False)
 conn = sqlite3.connect('movies.db')
 c = conn.cursor()
 
-# Create a table to store movie data
+# Create a table to store movie data with a unique constraint on the movie name
 c.execute('''CREATE TABLE IF NOT EXISTS movies
-             (Movie_Name TEXT, Picked_By TEXT, Avg_Rating REAL, Date TEXT, TMDB_ID INTEGER, Overview TEXT, Genres TEXT, 
+             (Movie_Name TEXT UNIQUE, Picked_By TEXT, Avg_Rating REAL, Date TEXT, TMDB_ID INTEGER, Overview TEXT, Genres TEXT, 
               Release_Date TEXT, Vote_Average REAL, Vote_Count INTEGER, TMDb_Link TEXT, Running_Time INTEGER)''')
 
-# Insert data into the table
+# Insert data into the table, checking for uniqueness
 for _, row in df.iterrows():
-    c.execute("INSERT INTO movies VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-              (row['Movie Name'], row['Picked By'], row['Avg Rating'], row['Date'], row['TMDB_ID'], row['Overview'],
-               row['Genres'], row['Release Date'], row['Vote Average'], row['Vote Count'], row['TMDb Link'], row['Running Time']))
+    try:
+        c.execute("INSERT INTO movies (Movie_Name, Picked_By, Avg_Rating, Date, TMDB_ID, Overview, Genres, Release_Date, Vote_Average, Vote_Count, TMDb_Link, Running_Time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                  (row['Movie Name'], row['Picked By'], row['Avg Rating'], row['Date'], row['TMDB_ID'], row['Overview'],
+                   row['Genres'], row['Release Date'], row['Vote Average'], row['Vote Count'], row['TMDb Link'], row['Running Time']))
+    except sqlite3.IntegrityError:
+        print(f"Movie '{row['Movie Name']}' is already in the database.")
 
 # Create a table to store error messages
 c.execute('''CREATE TABLE IF NOT EXISTS errors
@@ -182,12 +185,13 @@ def plot_comparison_chart(df_filtered, user, color):
     comparison_df.set_index('Movie Name', inplace=True)
 
     plt.figure(figsize=(14, 7))
-    comparison_df.plot(kind='bar', color=[color, 'gray'], edgecolor='black')
+    comparison_df.plot(kind='bar', color=[color, 'gray'])
     plt.xlabel('Movie Name')
     plt.ylabel('Rating')
-    plt.title(f'Comparison of {user.capitalize()}\'s Picks Ratings and TMDB Ratings')
-    plt.legend([f'{user.capitalize()}\'s Rating', 'TMDB Rating'])
+    plt.title(f'Comparison of {user.capitalize()}\'s Rating vs TMDB Rating')
+    plt.legend(['User Rating', 'TMDB Rating'])
     plt.xticks(rotation=90)
+    plt.tight_layout()
     plt.show()
 
 # Get the frequency of each genre
@@ -199,6 +203,7 @@ def plot_genre_frequency(df_filtered):
     plt.xlabel('Frequency')
     plt.ylabel('Genre')
     plt.title('Frequency of Genres')
+    plt.tight_layout()
     plt.show()
 
 def plot_genre_frequency_by_user(df_filtered, custom_palette):
@@ -217,6 +222,7 @@ def plot_genre_frequency_by_user(df_filtered, custom_palette):
     plt.title('Frequency of Each Genre Picked by Jon, Jim, and Phill')
     plt.xticks(rotation=45)
     plt.legend(title='User')
+    plt.tight_layout()
     plt.show()
 
 def plot_total_running_time(df_filtered, custom_palette):
@@ -230,20 +236,13 @@ def plot_total_running_time(df_filtered, custom_palette):
                           palette=[custom_palette[user] for user in total_running_time.index], ax=ax1)
 
     for index, value in enumerate(total_running_time.values):
-        barplot.text(index, value + 5, f'      {round(value, 2)} Minutes or ', color='black', ha="right")
+        barplot.text(index, value + 5, f'{round(value, 2)} Minutes or {round(value / (24 * 60), 2)} Days', color='black', ha="center")
 
     ax1.set_xlabel('User')
     ax1.set_ylabel('Total Running Time (minutes)')
     ax1.set_title('Total Running Time of Movies Picked by Each User')
     ax1.set_xticklabels(ax1.get_xticklabels(), rotation=45)
-
-    ax2 = ax1.twinx()
-    ax2.set_ylabel('Total Running Time (days)')
-    ax2.set_ylim(ax1.get_ylim()[0] / (24 * 60), ax1.get_ylim()[1] / (24 * 60))
-
-    for index, value in enumerate(total_running_time_days.values):
-        ax2.text(index, value + (5 / (24 * 60)), f'{round(value, 2)} Days', color='blue', ha="left")
-
+    plt.tight_layout()
     plt.show()
 
 def plot_picks_by_user(df_filtered):
