@@ -33,7 +33,7 @@ Clone the repo to your machine
 Create a virtual environment in the project folder. 
 ### python3 -m venv venv 
 Activate the virtual environment. 
-### source venv/bin/activate (for windows venv/Scripts/activate)
+### source venv/bin/activate (for windows venv/Scripts/activate) do this in bash
 Install the required packages. 
 ### pip install -r requirements.txt
 Navigate to MovieData/MovieData/MovieClubData.py
@@ -50,6 +50,7 @@ Below is a list of requirements I have hit for the project
 - I have included this README
 - I have more than 10 commits
 - I have made the project visually appealing by having set colors for the **MovieClub** members
+- I have split the code into seperate file for maintainability and readability (Although I left my initial file in there. I could not delete my baby!)
 - I have read in two data sets. One API, One CSV
 - I have Cleaned my data and performed a pandas merge with two data sets, and then calculated some new values based on the new data set. 
 - I have set up a local database and read data into SQLite 
