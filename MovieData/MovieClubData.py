@@ -40,8 +40,8 @@ def get_movie_details(title, api_key):
     if response.status_code == 200:
         data = response.json()
         if data['results']:
-            return data['results'][0]
-    return None
+            return data['results'][0], None
+    return None, f"Movie '{title}' not found in TMDB database."
 
 def get_genre_list(api_key):
     """Fetch the genre list from TMDB API."""
@@ -61,10 +61,13 @@ tmdb_columns = ['TMDB_ID', 'Overview', 'Genres', 'Release Date', 'Vote Average',
 for col in tmdb_columns:
     df[col] = None
 
+# List to store error messages
+error_messages = []
+
 # Fetch data for each movie in the DataFrame
 for idx, row in df.iterrows():
     title = row['Movie Name']
-    movie_details = get_movie_details(title, API_KEY)
+    movie_details, error_message = get_movie_details(title, API_KEY)
     if movie_details:
         movie_id = movie_details.get('id')
         if movie_id:
@@ -82,6 +85,8 @@ for idx, row in df.iterrows():
                 tmdb_id = movie_full_details.get('id')
                 if tmdb_id:
                     df.at[idx, 'TMDb Link'] = f'https://www.themoviedb.org/movie/{tmdb_id}'
+    else:
+        error_messages.append((title, error_message))
 
 # Drop unused Columns
 unused_columns = ['IMDB Link', '5 Star Rating', 'Unnamed: 10', 'Unnamed: 11', '1286', '1467', '1286']
@@ -104,6 +109,14 @@ for _, row in df.iterrows():
     c.execute("INSERT INTO movies VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
               (row['Movie Name'], row['Picked By'], row['Avg Rating'], row['Date'], row['TMDB_ID'], row['Overview'],
                row['Genres'], row['Release Date'], row['Vote Average'], row['Vote Count'], row['TMDb Link'], row['Running Time']))
+
+# Create a table to store error messages
+c.execute('''CREATE TABLE IF NOT EXISTS errors
+             (Movie_Name TEXT, Error_Message TEXT)''')
+
+# Insert error messages into the table
+for movie_name, error_message in error_messages:
+    c.execute("INSERT INTO errors VALUES (?, ?)", (movie_name, error_message))
 
 # Commit changes and close the connection
 conn.commit()
@@ -139,15 +152,6 @@ def plot_initial_charts(df_filtered):
     plt.xlabel('Avg Rating')
     plt.ylabel('Picked By')
     plt.title('Heatmap of Ratings by Jon, Jim, and Phill')
-    plt.show()
-
-    plt.figure(figsize=(12, 8))
-    sns.lineplot(data=df_filtered, x='Date', y='Avg Rating', hue='Picked By', marker='o', palette=custom_palette)
-    plt.xlabel('Date')
-    plt.ylabel('Average Rating')
-    plt.title('Trend of Average Ratings Over Time')
-    plt.xticks(rotation=45)
-    plt.gca().xaxis.set_major_locator(plt.MaxNLocator(20))
     plt.show()
 
     plt.figure(figsize=(12, 8))
