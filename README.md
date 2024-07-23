@@ -29,7 +29,8 @@ It will be a fun thing to show my buddies, and hopefully, you have some fun as w
 
 
 ### Instructions
-Clone the repo to your machine
+
+Clone the repo to your machine.
 Create a virtual environment in the project folder. 
 ### python3 -m venv venv 
 Activate the virtual environment. 
@@ -37,10 +38,10 @@ Activate the virtual environment.
 Install the required packages. 
 ### pip install -r requirements.txt
 Navigate to MovieData/MovieData/MovieClubData.py
-Click Run and Run without debugging 
-### (I had an issue where it wouldnt run from the command line if you do too use the top menu) 
-Buckle your seatbelt
+### enter python.main into the command line 
+Buckle your seatbelt.
 To view the SQL use your favorite DB Browser (I use SQLite)
+To view the powerpoint presentation download the .pptx file from gymbundye/github.
 When you are done working on your repo, deactivate the virtual environment. deactivate
                                                             
 ### Requirements
@@ -58,3 +59,4 @@ Below is a list of requirements I have hit for the project
 - I have made at least 1 Pandas pivot table and 1 matplotlib/seaborn plot.
 - I have utilized a virtual environment and included instructions in my README on how the user should set one up
 - I have included a data dictionary
+- I have included a powerpoint presentation to present my data
