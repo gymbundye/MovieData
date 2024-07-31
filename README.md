@@ -38,7 +38,7 @@ Activate the virtual environment.
 Install the required packages. 
 ### pip install -r requirements.txt
 Navigate to MovieData/MovieData/MovieClubData.py
-### enter python.main into the command line 
+### enter python main.py into the command line 
 Buckle your seatbelt.
 To view the SQL use your favorite DB Browser (I use SQLite)
 To view the powerpoint presentation download the .pptx file from gymbundye/github.
